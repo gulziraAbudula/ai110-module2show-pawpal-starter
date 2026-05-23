@@ -48,6 +48,7 @@ class Pet:
     name: str
     age: int
     breed: str
+    owner: 'Owner' = None
 
     def get_name(self) -> str:
         """Return the pet's name."""
@@ -83,6 +84,7 @@ class Task:
     duration: int
     priority: int
     is_completed: bool = False
+    pet: 'Pet' = None
 
     def get_title(self) -> str:
         """Return the task title."""
@@ -96,16 +98,32 @@ class Task:
         """Return the task type (walk, feeding, medication, etc.)."""
         pass
 
+    def set_task_type(self, task_type: str) -> None:
+        """Set the task type."""
+        pass
+
     def get_duration(self) -> int:
         """Return the task duration in minutes."""
+        pass
+
+    def set_duration(self, duration: int) -> None:
+        """Set the task duration in minutes."""
         pass
 
     def get_priority(self) -> int:
         """Return the task priority (1-5, where 1 is critical)."""
         pass
 
+    def set_priority(self, priority: int) -> None:
+        """Set the task priority (1-5, where 1 is critical)."""
+        pass
+
     def get_frequency(self) -> str:
         """Return the task frequency (daily, twice_daily, weekly)."""
+        pass
+
+    def set_frequency(self, frequency: str) -> None:
+        """Set the task frequency (daily, twice_daily, weekly)."""
         pass
 
     def mark_completed(self) -> None:
@@ -123,13 +141,14 @@ class DailySchedule:
     tasks: List[Task] = field(default_factory=list)
     scheduled_tasks: Dict[Task, int] = field(default_factory=dict)
 
-    def schedule(self, owner: Owner) -> Dict[Task, int]:
+    def schedule(self, owner: Owner, pets: List[Pet]) -> Dict[Task, int]:
         """
         Arrange tasks in a schedule based on owner constraints and task priorities.
-        
+
         Args:
             owner: The pet owner with available hours constraint
-            
+            pets: List of pets whose tasks need to be scheduled
+
         Returns:
             Dictionary mapping tasks to start hours (e.g., {task: 9} for 9am)
         """
@@ -138,7 +157,7 @@ class DailySchedule:
     def validate(self) -> bool:
         """
         Check if the schedule is valid.
-        
+
         Returns:
             True if valid (no overlaps, fits available hours, critical tasks included),
             False otherwise.
@@ -148,7 +167,7 @@ class DailySchedule:
     def get_validation_errors(self) -> List[str]:
         """
         Return a list of validation errors if any.
-        
+
         Returns:
             List of error messages describing any schedule issues.
         """
@@ -157,8 +176,17 @@ class DailySchedule:
     def explain(self) -> str:
         """
         Generate a human-readable explanation of the schedule.
-        
+
         Returns:
             A string explaining why each task was scheduled at its time.
+        """
+        pass
+
+    def get_scheduled_tasks(self) -> Dict[Task, int]:
+        """
+        Retrieve the generated schedule.
+
+        Returns:
+            Dictionary mapping tasks to start hours.
         """
         pass

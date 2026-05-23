@@ -29,8 +29,9 @@ pet:
     name: str
     age: int — Years old
     breed: str — Breed type
+    owner: Owner — Reference to the pet's owner
     =======
-    __init__(name, age, breed)
+    __init__(name, age, breed, owner)
     get_name() -> str
     set_name(name: str)
     get_age() -> int
@@ -44,14 +45,19 @@ task:
     duration: int — Minutes needed
     priority: int — 1 (critical) to 5 (optional)
     is_completed: bool — Whether done today
+    pet: Pet — Which pet this task is for
     =======
-    __init__(title, task_type, frequency, duration, priority)
+    __init__(title, task_type, frequency, duration, priority, pet)
     get_title() -> str
     set_title(title: str)
     get_task_type() -> str
+    set_task_type(task_type: str)
     get_duration() -> int
+    set_duration(duration: int)
     get_priority() -> int
+    set_priority(priority: int)
     get_frequency() -> str
+    set_frequency(frequency: str)
     mark_completed() — Set is_completed = True
     get_completion_status() -> bool
 daily schedule:
@@ -59,8 +65,11 @@ daily schedule:
     scheduled_tasks: dict — Format: {task: start_hour} (e.g., {walk_task: 9} means 9am)
     =======
     __init__(tasks)
-    schedule(owner: Owner) -> dict — Arrange tasks, return {task: start_hour}. Prioritizes by frequency + priority
+    schedule(owner: Owner, pets: List[Pet]) -> dict — Arrange tasks for given pets, return {task: start_hour}. Prioritizes by frequency + priority
     validate() -> bool — Check: no overlaps, total duration fits available hours, critical tasks included
+    get_validation_errors() -> list[str] — Return list of problems (if any)
+    explain() -> str — Simple explanation: "Task X at 9am because it's priority 1" format
+    get_scheduled_tasks() -> dict — Retrieve the generated schedule
     get_validation_errors() -> list[str] — Return list of problems (if any)
     explain() -> str — Simple explanation: "Task X at 9am because it's priority 1" format
 
@@ -69,6 +78,23 @@ daily schedule:
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+
+**Changes made after initial review:**
+
+1. **Added `owner: Owner` attribute to Pet class**
+   - Reason: Each pet needs to know which owner is responsible for it. This establishes the relationship and allows the app to organize pets by owner.
+
+2. **Added `pet: Pet` attribute to Task class**
+   - Reason: Critical for the scheduler to know which pet each task is for. Without this, we can't distinguish between "walk for the dog" vs "walk for the cat" or determine which tasks apply to which pets.
+
+3. **Added setter methods to Task class: `set_task_type()`, `set_duration()`, `set_priority()`, `set_frequency()`**
+   - Reason: The app requires users to "add/edit tasks" (from README). Setters allow users to modify task attributes after creation.
+
+4. **Updated `schedule()` method signature to include `pets` parameter: `schedule(owner: Owner, pets: List[Pet])`**
+   - Reason: The scheduler needs to know which pets' tasks to organize. This parameter tells it which tasks to consider for scheduling.
+
+5. **Added `get_scheduled_tasks()` method to DailySchedule**
+   - Reason: Allows retrieval of the generated schedule after `schedule()` is called. Useful for the Streamlit UI to display the plan.
 
 ---
 
