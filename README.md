@@ -41,3 +41,37 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Smarter Scheduling Features
+
+The scheduler includes several intelligent features to optimize pet care planning:
+
+### **Multi-Tier Sorting**
+Tasks are prioritized by:
+1. **Preferred time** — Tasks scheduled for specific times (e.g., 9:00 AM walk) come first
+2. **Task frequency** — Daily tasks before weekly tasks
+3. **Priority level** — Critical tasks (priority 1) scheduled before lower priorities
+4. **Availability** — Only tasks that fit within owner's available hours are scheduled
+
+### **Recurring Task Management**
+- When a **daily** or **weekly** task is marked complete, a new instance is automatically created for the next occurrence
+- Due dates calculated with Python's `timedelta` (daily: today+1, weekly: today+7)
+- Twice-daily tasks don't auto-recreate (they recur within the same day)
+
+### **Task Filtering**
+Filter tasks by:
+- **Completion status** — View completed vs. incomplete tasks
+- **Pet name** — See all tasks for a specific pet
+- **Combined filters** — Find incomplete tasks for Max, completed tasks for Luna, etc.
+
+### **Conflict Detection**
+- Detects when multiple tasks are scheduled at the same time
+- Identifies when the same pet has conflicting tasks (flagged as `[SAME PET: X]`)
+- Returns warnings instead of crashing, allowing owners to manually resolve conflicts
+- Uses lightweight O(n) algorithm with `defaultdict` for efficiency
+
+### **Constraint-Based Optimization**
+Hard constraints: Owner's available time, sequential scheduling starting at 9:00 AM
+Soft constraints: Task preferences, frequency, priority
+Tradeoff: Guarantees critical tasks fit, but may skip lower-priority tasks if time is tight (reasonable for pet health)
+
