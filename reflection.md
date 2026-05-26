@@ -102,14 +102,22 @@ daily schedule:
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
+- What constraints does your scheduler consider (for example: time, priority, preferences)? Available time and sequential scheduling are considered first then tasks are ordered based on 4-tier priority system.
+1) Tasks with preferred times first.
+2) Earlier times first (9:00 < 15:00)
+3) More frequent tasks firsts (daily < weekly)
+4) Critical tasks first (priority 1 < 3)
+And all priority-1 (critical) tasks must be scheduled, and schedule cannot be empty.
+
 - How did you decide which constraints mattered most?
+If the owner's availability doesn't match with task it is hard to do the task, and if there is a sequence block of time and owner is available, it is easy for owner to complete it all at once. 
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+It guaranteed to fit high-priority tasks first but it might leave gaps and it might drop lower-priority tasks unnecessarily.
 - Why is that tradeoff reasonable for this scenario?
-
+Because this schedule put pet health first, it prioritize its feeding and medications and other essentials first, then it fits with pet owner's schedule. Also it is simple, if there is any changes to the schedule, owner can change it easily. 
 ---
 
 ## 3. AI Collaboration

@@ -7,7 +7,8 @@ and daily schedules for pet care planning.
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
-from datetime import time
+from datetime import time, date, timedelta
+from collections import defaultdict
 
 
 @dataclass
@@ -83,6 +84,8 @@ class Task:
     frequency: str
     duration: int
     priority: int
+    time: Optional[time] = None
+    due_date: Optional[date] = None
     is_completed: bool = False
     pet: 'Pet' = None
 
@@ -159,7 +162,7 @@ class DailySchedule:
         frequency_order = {"daily": 0, "twice_daily": 0.5, "weekly": 2}
         sorted_tasks = sorted(
             self.tasks,
-            key=lambda t: (frequency_order.get(t.frequency, 1), t.priority)
+            key=lambda t: (t.time is None, t.time, frequency_order.get(t.frequency, 1), t.priority)
         )
 
         current_hour = 9
@@ -209,3 +212,103 @@ class DailySchedule:
     def get_scheduled_tasks(self) -> Dict[Task, int]:
         """Retrieve the generated schedule."""
         return self.scheduled_tasks
+
+    def filter_tasks(self, is_completed: Optional[bool] = None, pet_name: Optional[str] = None) -> List[Task]:
+        """Filter tasks by completion status and/or pet name.
+
+        Args:
+            is_completed: True for completed tasks, False for incomplete, None to ignore completion status
+            pet_name: Filter by pet name, None to include all pets
+
+        Returns:
+            List of tasks matching the filter criteria
+        """
+        filtered = self.tasks
+
+        if is_completed is not None:
+            filtered = [t for t in filtered if t.is_completed == is_completed]
+
+        if pet_name is not None:
+            filtered = [t for t in filtered if t.pet and t.pet.name == pet_name]
+
+        return filtered
+
+    def detect_scheduling_conflicts(self) -> List[str]:
+        """Detect tasks scheduled at overlapping times and return warnings.
+
+        Lightweight conflict detection that checks if multiple tasks are scheduled
+        at the same time. Returns warnings rather than raising exceptions.
+
+        Returns:
+            List of warning messages for any detected conflicts
+        """
+        warnings = []
+
+        if not self.scheduled_tasks:
+            return warnings
+
+        # Group tasks by start time
+        time_groups = {}
+        for task, hour in self.scheduled_tasks.items():
+            hour_key = int(hour)  # Round to nearest hour for grouping
+            if hour_key not in time_groups:
+                time_groups[hour_key] = []
+            time_groups[hour_key].append(task)
+
+        # Check for conflicts
+        for hour, tasks_at_hour in time_groups.items():
+            if len(tasks_at_hour) > 1:
+                task_info = []
+                pet_names = []
+                for task in tasks_at_hour:
+                    pet_name = task.pet.name if task.pet else "unknown pet"
+                    task_info.append(f"'{task.title}' ({pet_name})")
+                    pet_names.append(pet_name)
+
+                hour_str = f"{hour}:00"
+                warning = f"⚠ Time conflict at {hour_str}: {', '.join(task_info)}"
+
+                # Add note if same pet
+                if len(set(pet_names)) == 1:
+                    warning += f" [SAME PET: {pet_names[0]}]"
+
+                warnings.append(warning)
+
+        return warnings
+
+    def mark_task_complete(self, task: Task) -> Optional[Task]:
+        """Mark a task as complete and create next occurrence if recurring.
+
+        For daily and weekly tasks, automatically creates a new instance for the next occurrence
+        with due_date calculated using timedelta (daily: today+1, weekly: today+7).
+
+        Args:
+            task: The task to mark as complete
+
+        Returns:
+            The new task instance if recurring, None if not recurring
+        """
+        task.mark_completed()
+
+        if task.frequency in ("daily", "weekly"):
+            today = date.today()
+            if task.frequency == "daily":
+                next_due_date = today + timedelta(days=1)
+            else:  # weekly
+                next_due_date = today + timedelta(days=7)
+
+            next_task = Task(
+                title=task.title,
+                task_type=task.task_type,
+                frequency=task.frequency,
+                duration=task.duration,
+                priority=task.priority,
+                time=task.time,
+                due_date=next_due_date,
+                is_completed=False,
+                pet=task.pet
+            )
+            self.add_task(next_task)
+            return next_task
+
+        return None
